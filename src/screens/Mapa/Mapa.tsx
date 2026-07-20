@@ -165,9 +165,15 @@ export default function Mapa() {
       const marker = L.marker([place.lat!, place.lng!], { icon: pinDivIcon(place.status, false) });
       marker.on('click', () => selectFromPin(place.id));
       marker.addTo(map);
-      const el = marker.getElement();
-      if (el) {
-        el.style.animation = `drop-in 420ms var(--ease-spring) ${Math.min(i, 12) * 70}ms both`;
+      // A animação vai no filho (.map-pin), nunca no elemento que o Leaflet
+      // posiciona via transform: translate3d — animar "transform" nele
+      // sobrescreveria a posição do pin no mapa (jogando-o para 0,0).
+      const pinEl = marker.getElement()?.querySelector<HTMLElement>('.map-pin');
+      if (pinEl) {
+        pinEl.style.animation = `drop-in 420ms var(--ease-spring) ${Math.min(i, 12) * 70}ms both`;
+        // Limpa a animação ao terminar para não travar o transform (usado
+        // depois pela escala do estado ativo) no valor final do keyframe.
+        pinEl.addEventListener('animationend', () => { pinEl.style.animation = ''; }, { once: true });
       }
       markersRef.current[place.id] = marker;
     });
@@ -213,8 +219,6 @@ export default function Mapa() {
     return () => observer.disconnect();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [located]);
-
-  if (places === undefined) return null;
 
   return (
     <div className="mapa-screen">
