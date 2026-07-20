@@ -8,6 +8,9 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'autoUpdate',
+      // Registro é feito manualmente via `virtual:pwa-register/react` (useRegisterSW)
+      // em src/components/UpdateToast.tsx, para controlar o fluxo de atualização.
+      injectRegister: false,
       includeAssets: ['favicon.svg', 'apple-touch-icon.png'],
       manifest: {
         id: '/',
@@ -30,6 +33,11 @@ export default defineConfig({
       workbox: {
         globPatterns: ['**/*.{js,css,html,svg,png,ico,woff2}'],
         navigateFallbackDenylist: [/^\/api/],
+        // Faz o SW novo assumir o controle imediatamente (sem esperar todas as abas
+        // fecharem) e remove caches de precache de builds antigas.
+        skipWaiting: true,
+        clientsClaim: true,
+        cleanupOutdatedCaches: true,
       },
       devOptions: {
         enabled: false,

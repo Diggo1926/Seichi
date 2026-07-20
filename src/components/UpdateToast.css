@@ -1,0 +1,17 @@
+.update-toast {
+  position: fixed;
+  left: 50%;
+  top: calc(12px + var(--safe-top));
+  transform: translateX(-50%);
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  padding: 10px 18px;
+  border-radius: var(--radius-full);
+  color: var(--color-indigo);
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+  box-shadow: 0 8px 24px rgba(42, 45, 62, .16);
+  animation: fade-up var(--dur-medium) var(--ease-spring) both;
+}

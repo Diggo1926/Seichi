@@ -39,9 +39,12 @@ function normalizeExternalUrl(rawUrl: string): string {
   return /^https?:\/\//i.test(rawUrl) ? rawUrl : `https://${rawUrl}`;
 }
 
-const SHEET_HEIGHT_RATIO = 0.84;
-const OPEN_VISIBLE_RATIO = 0.54;
-const COLLAPSED_VISIBLE_PX = 118;
+type SheetState = 'peek' | 'half' | 'full';
+
+const FULL_HEIGHT_RATIO = 0.92;
+const HALF_VISIBLE_RATIO = 0.54;
+const PEEK_VISIBLE_PX = 120;
+const DRAG_THRESHOLD = 6;
 
 function PhotoSlide({ photo }: { photo: Photo }) {
   const url = useBlobUrl(photo.blob);
@@ -198,29 +201,82 @@ export default function Lugar() {
     setPhotoIndex(Math.round(el.scrollLeft / el.clientWidth));
   }
 
-  // ---- draggable bottom sheet ----
-  const [sheetState, setSheetState] = useState<'open' | 'collapsed'>('open');
+  // ---- draggable bottom sheet: três snap points (peek/half/full) ----
+  const [sheetState, setSheetState] = useState<SheetState>('half');
   const [dragY, setDragY] = useState<number | null>(null);
   const [dragging, setDragging] = useState(false);
   const [entered, setEntered] = useState(false);
   const dragStartClientY = useRef(0);
   const dragStartTranslate = useRef(0);
   const lastDelta = useRef(0);
+  const bodyRef = useRef<HTMLDivElement>(null);
+  const bodyGesture = useRef<{ startY: number; startScrollTop: number; mode: 'undecided' | 'scroll' | 'drag' } | null>(
+    null
+  );
 
   const viewportH = useMemo(() => window.innerHeight, []);
-  const sheetHeight = viewportH * SHEET_HEIGHT_RATIO;
-  const openY = sheetHeight - viewportH * OPEN_VISIBLE_RATIO;
-  const collapsedY = sheetHeight - COLLAPSED_VISIBLE_PX;
+  const sheetHeight = viewportH * FULL_HEIGHT_RATIO;
+  const fullY = 0;
+  const halfY = sheetHeight - viewportH * HALF_VISIBLE_RATIO;
+  const peekY = sheetHeight - PEEK_VISIBLE_PX;
+  const snapY: Record<SheetState, number> = { full: fullY, half: halfY, peek: peekY };
+
+  function clampY(value: number) {
+    return Math.min(peekY, Math.max(fullY, value));
+  }
+
+  function nearestSnap(value: number): SheetState {
+    let best: SheetState = 'half';
+    let bestDist = Infinity;
+    (['full', 'half', 'peek'] as SheetState[]).forEach((s) => {
+      const dist = Math.abs(snapY[s] - value);
+      if (dist < bestDist) {
+        bestDist = dist;
+        best = s;
+      }
+    });
+    return best;
+  }
 
   useEffect(() => {
     const raf = requestAnimationFrame(() => setEntered(true));
     return () => cancelAnimationFrame(raf);
   }, []);
 
+  // Teclado do iOS: acompanha o quanto a visualViewport encolheu para o campo
+  // focado não ficar coberto pelo teclado.
+  const [keyboardInset, setKeyboardInset] = useState(0);
+  useEffect(() => {
+    const vv = window.visualViewport;
+    if (!vv) return;
+    function onResize() {
+      const inset = Math.max(0, window.innerHeight - vv!.height - vv!.offsetTop);
+      setKeyboardInset(inset);
+    }
+    vv.addEventListener('resize', onResize);
+    vv.addEventListener('scroll', onResize);
+    onResize();
+    return () => {
+      vv.removeEventListener('resize', onResize);
+      vv.removeEventListener('scroll', onResize);
+    };
+  }, []);
+
+  function finishDrag() {
+    setDragging(false);
+    if (Math.abs(lastDelta.current) < DRAG_THRESHOLD) {
+      setSheetState((s) => (s === 'peek' ? 'half' : s === 'half' ? 'full' : 'half'));
+    } else {
+      setSheetState(nearestSnap(dragY ?? snapY[sheetState]));
+    }
+    setDragY(null);
+  }
+
+  // Arrastar a partir da alça/cabeçalho: sempre move o painel.
   function onHandlePointerDown(e: React.PointerEvent) {
     (e.target as Element).setPointerCapture(e.pointerId);
     dragStartClientY.current = e.clientY;
-    dragStartTranslate.current = sheetState === 'open' ? openY : collapsedY;
+    dragStartTranslate.current = snapY[sheetState];
     lastDelta.current = 0;
     setDragging(true);
   }
@@ -229,30 +285,76 @@ export default function Lugar() {
     if (!dragging) return;
     const delta = e.clientY - dragStartClientY.current;
     lastDelta.current = delta;
-    const next = Math.min(collapsedY, Math.max(openY, dragStartTranslate.current + delta));
-    setDragY(next);
+    setDragY(clampY(dragStartTranslate.current + delta));
   }
 
   function onHandlePointerUp() {
     if (!dragging) return;
-    setDragging(false);
-    if (Math.abs(lastDelta.current) < 6) {
-      setSheetState((s) => (s === 'collapsed' ? 'open' : s));
-    } else {
-      const current = dragY ?? (sheetState === 'open' ? openY : collapsedY);
-      const mid = (openY + collapsedY) / 2;
-      setSheetState(current < mid ? 'open' : 'collapsed');
-    }
-    setDragY(null);
+    finishDrag();
   }
 
   function stopDragPropagation(e: React.PointerEvent) {
     e.stopPropagation();
   }
 
+  // Arrastar a partir do corpo (conteúdo): só vira "arrastar o painel" quando o
+  // scroll interno já está no topo e o gesto é claramente para baixo — o
+  // comportamento nativo de bottom sheet do iOS. Caso contrário, é rolagem normal.
+  function onBodyPointerDown(e: React.PointerEvent) {
+    const body = bodyRef.current;
+    if (!body) return;
+    bodyGesture.current = { startY: e.clientY, startScrollTop: body.scrollTop, mode: 'undecided' };
+  }
+
+  function onBodyPointerMove(e: React.PointerEvent) {
+    const gesture = bodyGesture.current;
+    if (!gesture) return;
+    const delta = e.clientY - gesture.startY;
+
+    if (gesture.mode === 'undecided') {
+      if (Math.abs(delta) < DRAG_THRESHOLD) return;
+      if (gesture.startScrollTop <= 0 && delta > 0) {
+        gesture.mode = 'drag';
+        (e.target as Element).setPointerCapture(e.pointerId);
+        dragStartClientY.current = gesture.startY;
+        dragStartTranslate.current = snapY[sheetState];
+        lastDelta.current = 0;
+        setDragging(true);
+      } else {
+        gesture.mode = 'scroll';
+      }
+    }
+
+    if (gesture.mode === 'drag') {
+      e.preventDefault();
+      const d = e.clientY - dragStartClientY.current;
+      lastDelta.current = d;
+      setDragY(clampY(dragStartTranslate.current + d));
+    }
+  }
+
+  function onBodyPointerUp() {
+    if (bodyGesture.current?.mode === 'drag') {
+      finishDrag();
+    }
+    bodyGesture.current = null;
+  }
+
+  // Focar um campo dentro do corpo sobe o painel para "cheio" e rola o campo
+  // para ficar visível acima do teclado.
+  function onBodyFocus(e: React.FocusEvent<HTMLElement>) {
+    const tag = e.target.tagName;
+    if (tag !== 'INPUT' && tag !== 'TEXTAREA') return;
+    setSheetState('full');
+    const target = e.target;
+    requestAnimationFrame(() => {
+      target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    });
+  }
+
   if (!place) return null;
 
-  const y = dragY ?? (sheetState === 'open' ? openY : collapsedY);
+  const y = dragY ?? snapY[sheetState];
   const translateY = entered ? y : sheetHeight;
   const meta = STATUS_META[place.status];
 
@@ -345,7 +447,16 @@ export default function Lugar() {
           </div>
         </div>
 
-        <div className="lugar-sheet__body">
+        <div
+          className="lugar-sheet__body"
+          ref={bodyRef}
+          onPointerDown={onBodyPointerDown}
+          onPointerMove={onBodyPointerMove}
+          onPointerUp={onBodyPointerUp}
+          onPointerCancel={onBodyPointerUp}
+          onFocus={onBodyFocus}
+          style={keyboardInset > 0 ? { paddingBottom: keyboardInset + 32 } : undefined}
+        >
           <a
             href={googleMapsUrl(place)}
             target="_blank"

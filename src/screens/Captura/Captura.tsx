@@ -230,7 +230,7 @@ export default function Captura() {
 
       {confirmingLocation && (
         <div className="capture-locate">
-          <div className="capture-locate__scrim" onClick={() => setConfirmingLocation(false)} />
+          <div className="capture-locate__scrim" onClick={() => handleSave(false)} />
           <div className="capture-locate__card glass fade-up">
             <p className="capture-locate__title">Você está neste lugar agora?</p>
             <p className="capture-locate__hint">
@@ -239,10 +239,10 @@ export default function Captura() {
             </p>
             <div className="capture-locate__actions">
               <button type="button" className="capture-locate__yes press" onClick={() => handleSave(true)}>
-                Sim, usar minha localização
+                Sim, estou aqui
               </button>
               <button type="button" className="capture-locate__no press" onClick={() => handleSave(false)}>
-                Não, definir depois
+                Não / definir depois
               </button>
             </div>
           </div>

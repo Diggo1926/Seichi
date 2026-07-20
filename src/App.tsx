@@ -5,6 +5,7 @@ import Galeria from './screens/Galeria/Galeria';
 import Lugar from './screens/Lugar/Lugar';
 import Config from './screens/Config/Config';
 import TabBar from './components/TabBar';
+import UpdateToast from './components/UpdateToast';
 import { ensureBuiltinTags } from './db';
 
 const Mapa = lazy(() => import('./screens/Mapa/Mapa'));
@@ -29,6 +30,7 @@ function Shell() {
         </Suspense>
       </div>
       {showTabBar && <TabBar />}
+      <UpdateToast />
     </div>
   );
 }
