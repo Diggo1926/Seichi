@@ -83,10 +83,15 @@ export default function Mapa() {
   useEffect(() => {
     if (!online || !mapElRef.current || mapInstance.current) return;
     const map = L.map(mapElRef.current, { zoomControl: false }).setView([-14.235, -51.925], 4);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    // OSM não recomenda mais o sharding por subdomínio {a,b,c}.tile.openstreetmap.org;
+    // o host único abaixo é o atual e evita falhas de resolução/roteamento dessas subdomínios.
+    const tileLayer = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
       maxZoom: 19,
       attribution: '&copy; OpenStreetMap',
     }).addTo(map);
+    tileLayer.on('tileerror', (err) => {
+      console.warn('[Seichi] Falha ao carregar tile do mapa:', err);
+    });
     mapInstance.current = map;
 
     // O container pode ainda não ter altura definida no primeiro layout (ex.: barra

@@ -200,3 +200,68 @@
   color: var(--color-indigo);
   text-decoration: underline;
 }
+
+.capture-locate {
+  position: fixed;
+  inset: 0;
+  z-index: 30;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+
+.capture-locate__scrim {
+  position: absolute;
+  inset: 0;
+  background: rgba(20, 21, 32, .45);
+}
+
+.capture-locate__card {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  margin: 0 12px calc(24px + var(--safe-bottom));
+  border-radius: var(--radius-lg);
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  color: var(--color-text);
+}
+
+.capture-locate__title {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 17px;
+}
+
+.capture-locate__hint {
+  font-size: 13px;
+  color: var(--color-text-secondary);
+  line-height: 1.5;
+  margin-bottom: 6px;
+}
+
+.capture-locate__actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.capture-locate__yes {
+  height: 46px;
+  border-radius: var(--radius-sm);
+  background: var(--color-indigo);
+  color: #fff;
+  font-weight: 700;
+  font-size: 14px;
+}
+
+.capture-locate__no {
+  height: 46px;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--color-text-secondary);
+  font-weight: 600;
+  font-size: 14px;
+}

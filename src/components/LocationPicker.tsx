@@ -25,7 +25,7 @@ export default function LocationPicker({ initialLat, initialLng, onConfirm, onCl
       hasInitial ? [initialLat!, initialLng!] : DEFAULT_CENTER,
       hasInitial ? 16 : 4
     );
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
       maxZoom: 19,
       attribution: '&copy; OpenStreetMap',
     }).addTo(map);

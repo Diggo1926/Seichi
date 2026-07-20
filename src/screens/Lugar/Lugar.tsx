@@ -412,7 +412,54 @@ export default function Lugar() {
             </div>
           </section>
 
-          <section className="lugar-section fade-up" style={{ animationDelay: '140ms' }}>
+          <section className="lugar-section fade-up" style={{ animationDelay: '120ms' }}>
+            <h3>Tags</h3>
+            <div className="lugar-tags-row">
+              {tags.map((tag) => {
+                const active = place.tags.includes(tag.id);
+                return (
+                  <span
+                    key={tag.id}
+                    className={`chip press${active ? ' chip--active' : ' glass'}`}
+                    onClick={() => toggleTag(tag.id)}
+                  >
+                    {tag.label}
+                    {!tag.builtin && (
+                      <button
+                        type="button"
+                        className="lugar-tag-remove"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDeleteTag(tag.id);
+                        }}
+                        aria-label={`Excluir tag ${tag.label}`}
+                      >
+                        <CloseIcon size={12} />
+                      </button>
+                    )}
+                  </span>
+                );
+              })}
+              {showTagInput ? (
+                <span className="lugar-tag-new-form">
+                  <input
+                    autoFocus
+                    value={tagInputValue}
+                    onChange={(e) => setTagInputValue(e.target.value)}
+                    onKeyDown={(e) => e.key === 'Enter' && handleCreateTag()}
+                    placeholder="Nova tag"
+                  />
+                  <button type="button" onClick={handleCreateTag}>OK</button>
+                </span>
+              ) : (
+                <button type="button" className="chip glass press" onClick={() => setShowTagInput(true)}>
+                  + Nova tag
+                </button>
+              )}
+            </div>
+          </section>
+
+          <section className="lugar-section fade-up" style={{ animationDelay: '160ms' }}>
             <h3>Avaliação</h3>
             <div className="lugar-rating-list">
               {[1, 2, 3, 4, 5].map((n) => {
@@ -482,53 +529,6 @@ export default function Lugar() {
                 Adicionar Instagram
               </button>
             )}
-          </section>
-
-          <section className="lugar-section fade-up" style={{ animationDelay: '260ms' }}>
-            <h3>Tags</h3>
-            <div className="lugar-tags-row">
-              {tags.map((tag) => {
-                const active = place.tags.includes(tag.id);
-                return (
-                  <span
-                    key={tag.id}
-                    className={`chip press${active ? ' chip--active' : ' glass'}`}
-                    onClick={() => toggleTag(tag.id)}
-                  >
-                    {tag.label}
-                    {!tag.builtin && (
-                      <button
-                        type="button"
-                        className="lugar-tag-remove"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleDeleteTag(tag.id);
-                        }}
-                        aria-label={`Excluir tag ${tag.label}`}
-                      >
-                        <CloseIcon size={12} />
-                      </button>
-                    )}
-                  </span>
-                );
-              })}
-              {showTagInput ? (
-                <span className="lugar-tag-new-form">
-                  <input
-                    autoFocus
-                    value={tagInputValue}
-                    onChange={(e) => setTagInputValue(e.target.value)}
-                    onKeyDown={(e) => e.key === 'Enter' && handleCreateTag()}
-                    placeholder="Nova tag"
-                  />
-                  <button type="button" onClick={handleCreateTag}>OK</button>
-                </span>
-              ) : (
-                <button type="button" className="chip glass press" onClick={() => setShowTagInput(true)}>
-                  + Nova tag
-                </button>
-              )}
-            </div>
           </section>
 
           <button type="button" className="lugar-delete press fade-up" style={{ animationDelay: '300ms' }} onClick={handleDeletePlace}>

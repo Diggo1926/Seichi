@@ -167,7 +167,14 @@
 
 .lugar-sheet__body {
   flex: 1;
+  min-height: 0;
   overflow-y: auto;
+  /* .lugar-sheet define touch-action:none para o gesto de arrastar funcionar no
+     cabeçalho; sem reabilitar o pan vertical aqui, o corpo herdava esse bloqueio
+     e ficava impossível rolar por toque até o fim (Tags/Excluir inacessíveis). */
+  touch-action: pan-y;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: contain;
   padding: 4px 20px calc(32px + var(--safe-bottom));
   display: flex;
   flex-direction: column;

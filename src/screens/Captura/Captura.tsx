@@ -52,6 +52,7 @@ export default function Captura() {
   const previewUrl = useBlobUrl(pendingFile ?? undefined);
   const [saving, setSaving] = useState(false);
   const [savedId, setSavedId] = useState<string | null>(null);
+  const [confirmingLocation, setConfirmingLocation] = useState(false);
 
   const cameraInputRef = useRef<HTMLInputElement>(null);
   const galleryInputRef = useRef<HTMLInputElement>(null);
@@ -71,13 +72,19 @@ export default function Captura() {
     setPendingFile(null);
   }
 
-  async function handleSave() {
+  function requestSave() {
     if (!pendingFile || saving) return;
+    setConfirmingLocation(true);
+  }
+
+  async function handleSave(useCurrentLocation: boolean) {
+    if (!pendingFile || saving) return;
+    setConfirmingLocation(false);
     setSaving(true);
     try {
       const [{ full, thumb }, position] = await Promise.all([
         processImage(pendingFile),
-        getCurrentPosition(),
+        useCurrentLocation ? getCurrentPosition() : Promise.resolve(null),
       ]);
 
       const placeId = uuid();
@@ -185,7 +192,7 @@ export default function Captura() {
             <button
               type="button"
               className="capture-panel__save tap-target press"
-              onClick={handleSave}
+              onClick={requestSave}
               disabled={saving}
             >
               {saving ? 'Salvando…' : 'Salvar'}
@@ -220,6 +227,27 @@ export default function Captura() {
         style={{ display: 'none' }}
         onChange={onFilePicked}
       />
+
+      {confirmingLocation && (
+        <div className="capture-locate">
+          <div className="capture-locate__scrim" onClick={() => setConfirmingLocation(false)} />
+          <div className="capture-locate__card glass fade-up">
+            <p className="capture-locate__title">Você está neste lugar agora?</p>
+            <p className="capture-locate__hint">
+              Isso grava sua localização atual como a posição deste lugar no mapa. Você pode definir
+              ou ajustar isso depois, na tela do lugar.
+            </p>
+            <div className="capture-locate__actions">
+              <button type="button" className="capture-locate__yes press" onClick={() => handleSave(true)}>
+                Sim, usar minha localização
+              </button>
+              <button type="button" className="capture-locate__no press" onClick={() => handleSave(false)}>
+                Não, definir depois
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
