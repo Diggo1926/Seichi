@@ -1,0 +1,68 @@
+.config-screen {
+  min-height: 100svh;
+  padding-bottom: 40px;
+}
+
+.config-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: calc(16px + var(--safe-top)) 16px 8px;
+}
+
+.config-header h1 {
+  flex: 1;
+  text-align: center;
+  font-size: 17px;
+}
+
+.config-header__spacer {
+  width: 44px;
+}
+
+.config-section {
+  padding: 20px 20px 8px;
+  border-bottom: 1px solid var(--color-line);
+}
+
+.config-section h2 {
+  font-size: 15px;
+  margin-bottom: 8px;
+}
+
+.config-section__hint {
+  font-size: 13px;
+  color: var(--color-text-secondary);
+  line-height: 1.5;
+  margin-bottom: 16px;
+}
+
+.config-btn {
+  width: 100%;
+  padding: 14px;
+  border-radius: var(--radius-sm);
+  font-weight: 600;
+  font-size: 14px;
+  margin-bottom: 10px;
+}
+
+.config-btn--primary {
+  background: var(--color-indigo);
+  color: #fff;
+}
+
+.config-btn--secondary {
+  background: var(--color-surface);
+  color: var(--color-indigo);
+  border: 1px solid var(--color-line);
+}
+
+.config-btn:disabled {
+  opacity: .6;
+}
+
+.config-message {
+  font-size: 13px;
+  color: var(--color-menta);
+  font-weight: 600;
+}

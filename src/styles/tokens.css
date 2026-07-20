@@ -1,0 +1,46 @@
+:root {
+  /* base */
+  --color-bg: #F6F4EF;
+  --color-surface: #FFFFFF;
+  --color-text: #2A2D3E;
+  --color-text-secondary: #87878F;
+  --color-line: #E9E6DE;
+
+  /* accents — cada cor tem papel fixo e exclusivo */
+  --color-indigo: #3D4C8C;
+  --color-indigo-soft: #E9EAF4;
+  --color-menta: #2F8C72;
+  --color-menta-soft: #E2F1EB;
+  --color-coral: #D95B43;
+  --color-coral-soft: #FBEAE5;
+
+  /* type */
+  --font-display: 'Space Grotesk', 'Inter', system-ui, sans-serif;
+  --font-body: 'Inter', system-ui, sans-serif;
+
+  /* radii */
+  --radius-sm: 13px;
+  --radius-md: 18px;
+  --radius-lg: 26px;
+  --radius-full: 999px;
+
+  /* motion */
+  --ease-spring: cubic-bezier(.25, .8, .35, 1);
+  --dur-fast: 160ms;
+  --dur-medium: 320ms;
+  --dur-slow: 1400ms;
+
+  /* glass */
+  --glass-light-bg: rgba(255, 255, 255, .55);
+  --glass-light-border: rgba(255, 255, 255, .45);
+  --glass-dark-bg: rgba(30, 32, 44, .35);
+  --glass-dark-border: rgba(255, 255, 255, .3);
+
+  /* safe areas */
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-left: env(safe-area-inset-left, 0px);
+  --safe-right: env(safe-area-inset-right, 0px);
+
+  color-scheme: light only;
+}

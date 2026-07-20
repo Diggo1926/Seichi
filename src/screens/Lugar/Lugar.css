@@ -1,0 +1,352 @@
+.lugar-screen {
+  position: relative;
+  height: 100svh;
+  overflow: hidden;
+  background: #14151f;
+}
+
+.lugar-photos {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+}
+
+.lugar-photos::-webkit-scrollbar {
+  display: none;
+}
+
+.lugar-photo-slide {
+  flex: 0 0 100%;
+  scroll-snap-align: start;
+  position: relative;
+  height: 100%;
+  overflow: hidden;
+}
+
+.lugar-photo-slide--empty {
+  background: linear-gradient(160deg, var(--color-indigo), var(--color-coral));
+}
+
+.lugar-photo-slide__img {
+  position: absolute;
+  inset: -4%;
+  background-size: cover;
+  background-position: center;
+  animation: ken-burns-in 20s ease-in-out infinite alternate;
+}
+
+.lugar-photos__veil {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(to bottom, rgba(0, 0, 0, .35) 0%, rgba(0, 0, 0, 0) 22%, rgba(0, 0, 0, 0) 60%, rgba(0, 0, 0, .5) 100%);
+}
+
+.lugar-dots {
+  position: absolute;
+  top: calc(16px + var(--safe-top));
+  left: 0;
+  right: 0;
+  z-index: 6;
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+}
+
+.lugar-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, .4);
+}
+
+.lugar-dot--active {
+  background: #fff;
+}
+
+.lugar-back {
+  position: absolute;
+  top: calc(16px + var(--safe-top));
+  left: 16px;
+  z-index: 6;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  color: #fff;
+}
+
+.lugar-sheet {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 8;
+  background: var(--color-bg);
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+  box-shadow: 0 -12px 36px rgba(0, 0, 0, .18);
+  display: flex;
+  flex-direction: column;
+  touch-action: none;
+}
+
+.lugar-sheet__drag {
+  flex-shrink: 0;
+  padding: 10px 20px 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  cursor: grab;
+}
+
+.lugar-sheet__handle {
+  width: 40px;
+  height: 4px;
+  border-radius: var(--radius-full);
+  background: var(--color-line);
+}
+
+.lugar-sheet__name {
+  width: 100%;
+  border: none;
+  outline: none;
+  background: transparent;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 21px;
+  color: var(--color-text);
+  text-align: left;
+  touch-action: auto;
+}
+
+.lugar-sheet__address-row {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.lugar-sheet__address {
+  flex: 1;
+  border: none;
+  outline: none;
+  background: transparent;
+  font-size: 13px;
+  color: var(--color-text-secondary);
+  touch-action: auto;
+}
+
+.lugar-sheet__body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 4px 20px calc(32px + var(--safe-bottom));
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+  -webkit-overflow-scrolling: touch;
+}
+
+.lugar-maps-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 13px;
+  border-radius: var(--radius-md);
+  font-weight: 600;
+  font-size: 14px;
+  color: var(--color-indigo);
+}
+
+.lugar-location-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-indigo);
+  align-self: center;
+}
+
+.lugar-section h3 {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--color-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: .04em;
+  margin-bottom: 10px;
+}
+
+.lugar-photo-strip {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.lugar-photo-strip::-webkit-scrollbar {
+  display: none;
+}
+
+.lugar-photo-thumb {
+  flex: 0 0 auto;
+  width: 72px;
+  height: 72px;
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  background: var(--color-line);
+}
+
+.lugar-photo-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.lugar-photo-add {
+  flex: 0 0 auto;
+  width: 72px;
+  height: 72px;
+  border-radius: var(--radius-sm);
+  border: 1.5px dashed var(--color-line);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  color: var(--color-indigo);
+  font-size: 10px;
+  font-weight: 600;
+}
+
+.lugar-status-row,
+.lugar-tags-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.chip--status-active {
+  font-weight: 700;
+}
+
+.chip--active {
+  background: var(--color-indigo-soft);
+  color: var(--color-indigo);
+}
+
+.lugar-rating-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.lugar-rating-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  border: 1px solid var(--color-line);
+  text-align: left;
+  font-size: 14px;
+  color: var(--color-text);
+}
+
+.lugar-rating-item__num {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--color-line);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.lugar-rating-item--active {
+  background: var(--color-coral-soft);
+  border-color: transparent;
+  color: var(--color-coral);
+}
+
+.lugar-rating-item--active .lugar-rating-item__num {
+  background: var(--color-coral);
+  color: #fff;
+}
+
+.lugar-notes {
+  width: 100%;
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-sm);
+  padding: 12px 14px;
+  font-size: 14px;
+  font-family: var(--font-body);
+  color: var(--color-text);
+  background: var(--color-surface);
+  resize: vertical;
+}
+
+.lugar-instagram {
+  width: 100%;
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-sm);
+  padding: 12px 14px;
+  font-size: 14px;
+  background: var(--color-surface);
+  color: var(--color-text);
+}
+
+.lugar-tag-remove {
+  display: inline-flex;
+  margin-left: 4px;
+  opacity: .6;
+}
+
+.lugar-tag-new-form {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.lugar-tag-new-form input {
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-full);
+  padding: 8px 12px;
+  font-size: 13px;
+  width: 110px;
+}
+
+.lugar-tag-new-form button {
+  color: var(--color-indigo);
+  font-weight: 700;
+  font-size: 13px;
+}
+
+.lugar-delete {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px;
+  color: var(--color-text-secondary);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.lugar-notfound {
+  min-height: 100svh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  color: var(--color-text-secondary);
+}
