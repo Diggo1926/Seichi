@@ -22,9 +22,14 @@ export const db = new SeichiDB();
 const BUILTIN_TAGS = ['Sozinho', 'Romântico', 'Amigos', 'Família'];
 
 export async function ensureBuiltinTags() {
-  const count = await db.tags.count();
-  if (count > 0) return;
-  await db.tags.bulkAdd(
-    BUILTIN_TAGS.map((label) => ({ id: uuid(), label, builtin: true }))
-  );
+  // Envolvido numa transação para o check-then-insert ser atômico: sem isso,
+  // duas chamadas concorrentes (ex.: StrictMode invocando o efeito duas vezes)
+  // podiam ver a contagem zerada ao mesmo tempo e duplicar as tags fixas.
+  await db.transaction('rw', db.tags, async () => {
+    const count = await db.tags.count();
+    if (count > 0) return;
+    await db.tags.bulkAdd(
+      BUILTIN_TAGS.map((label) => ({ id: uuid(), label, builtin: true }))
+    );
+  });
 }

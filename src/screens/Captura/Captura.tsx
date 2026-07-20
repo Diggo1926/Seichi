@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { Link } from 'react-router-dom';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { v4 as uuid } from 'uuid';
@@ -228,26 +229,28 @@ export default function Captura() {
         onChange={onFilePicked}
       />
 
-      {confirmingLocation && (
-        <div className="capture-locate">
-          <div className="capture-locate__scrim" onClick={() => handleSave(false)} />
-          <div className="capture-locate__card glass fade-up">
-            <p className="capture-locate__title">Você está neste lugar agora?</p>
-            <p className="capture-locate__hint">
-              Isso grava sua localização atual como a posição deste lugar no mapa. Você pode definir
-              ou ajustar isso depois, na tela do lugar.
-            </p>
-            <div className="capture-locate__actions">
-              <button type="button" className="capture-locate__yes press" onClick={() => handleSave(true)}>
-                Sim, estou aqui
-              </button>
-              <button type="button" className="capture-locate__no press" onClick={() => handleSave(false)}>
-                Não / definir depois
-              </button>
+      {confirmingLocation &&
+        createPortal(
+          <div className="capture-locate">
+            <div className="capture-locate__scrim" onClick={() => handleSave(false)} />
+            <div className="capture-locate__card glass fade-up">
+              <p className="capture-locate__title">Você está neste lugar agora?</p>
+              <p className="capture-locate__hint">
+                Isso grava sua localização atual como a posição deste lugar no mapa. Você pode
+                definir ou ajustar isso depois, na tela do lugar.
+              </p>
+              <div className="capture-locate__actions">
+                <button type="button" className="capture-locate__yes press" onClick={() => handleSave(true)}>
+                  Sim, estou aqui
+                </button>
+                <button type="button" className="capture-locate__no press" onClick={() => handleSave(false)}>
+                  Não / definir depois
+                </button>
+              </div>
             </div>
-          </div>
-        </div>
-      )}
+          </div>,
+          document.body
+        )}
     </div>
   );
 }

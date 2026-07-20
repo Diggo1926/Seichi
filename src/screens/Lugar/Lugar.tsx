@@ -210,9 +210,6 @@ export default function Lugar() {
   const dragStartTranslate = useRef(0);
   const lastDelta = useRef(0);
   const bodyRef = useRef<HTMLDivElement>(null);
-  const bodyGesture = useRef<{ startY: number; startScrollTop: number; mode: 'undecided' | 'scroll' | 'drag' } | null>(
-    null
-  );
 
   const viewportH = useMemo(() => window.innerHeight, []);
   const sheetHeight = viewportH * FULL_HEIGHT_RATIO;
@@ -297,48 +294,11 @@ export default function Lugar() {
     e.stopPropagation();
   }
 
-  // Arrastar a partir do corpo (conteúdo): só vira "arrastar o painel" quando o
-  // scroll interno já está no topo e o gesto é claramente para baixo — o
-  // comportamento nativo de bottom sheet do iOS. Caso contrário, é rolagem normal.
-  function onBodyPointerDown(e: React.PointerEvent) {
-    const body = bodyRef.current;
-    if (!body) return;
-    bodyGesture.current = { startY: e.clientY, startScrollTop: body.scrollTop, mode: 'undecided' };
-  }
-
-  function onBodyPointerMove(e: React.PointerEvent) {
-    const gesture = bodyGesture.current;
-    if (!gesture) return;
-    const delta = e.clientY - gesture.startY;
-
-    if (gesture.mode === 'undecided') {
-      if (Math.abs(delta) < DRAG_THRESHOLD) return;
-      if (gesture.startScrollTop <= 0 && delta > 0) {
-        gesture.mode = 'drag';
-        (e.target as Element).setPointerCapture(e.pointerId);
-        dragStartClientY.current = gesture.startY;
-        dragStartTranslate.current = snapY[sheetState];
-        lastDelta.current = 0;
-        setDragging(true);
-      } else {
-        gesture.mode = 'scroll';
-      }
-    }
-
-    if (gesture.mode === 'drag') {
-      e.preventDefault();
-      const d = e.clientY - dragStartClientY.current;
-      lastDelta.current = d;
-      setDragY(clampY(dragStartTranslate.current + d));
-    }
-  }
-
-  function onBodyPointerUp() {
-    if (bodyGesture.current?.mode === 'drag') {
-      finishDrag();
-    }
-    bodyGesture.current = null;
-  }
+  // O corpo do sheet rola de forma 100% nativa (overflow-y:auto + touch-action:pan-y);
+  // nenhum handler de ponteiro customizado é anexado a ele. Interceptar o gesto de
+  // rolagem por JS (mesmo sem preventDefault na maior parte do tempo) mostrou-se
+  // frágil em iOS real, deixando Notas/Instagram/Excluir "presos" e inalcançáveis.
+  // Arrastar o painel continua possível apenas pela alça/cabeçalho (acima).
 
   // Focar um campo dentro do corpo sobe o painel para "cheio" e rola o campo
   // para ficar visível acima do teclado.
@@ -450,10 +410,6 @@ export default function Lugar() {
         <div
           className="lugar-sheet__body"
           ref={bodyRef}
-          onPointerDown={onBodyPointerDown}
-          onPointerMove={onBodyPointerMove}
-          onPointerUp={onBodyPointerUp}
-          onPointerCancel={onBodyPointerUp}
           onFocus={onBodyFocus}
           style={keyboardInset > 0 ? { paddingBottom: keyboardInset + 32 } : undefined}
         >

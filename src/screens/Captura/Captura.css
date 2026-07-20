@@ -204,7 +204,9 @@
 .capture-locate {
   position: fixed;
   inset: 0;
-  z-index: 30;
+  /* Precisa ficar acima da tab bar (z-index: 40): sendo um diálogo modal,
+     não pode ter nenhum de seus botões coberto por ela. */
+  z-index: 50;
   display: flex;
   align-items: flex-end;
   justify-content: center;

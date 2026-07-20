@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import L from 'leaflet';
 import { getCurrentPosition } from '../lib/geo';
 import { CloseIcon, LocationIcon } from './icons';
@@ -71,7 +72,7 @@ export default function LocationPicker({ initialLat, initialLng, onConfirm, onCl
     onConfirm(center.lat, center.lng);
   }
 
-  return (
+  return createPortal(
     <div className="location-picker">
       <div ref={mapElRef} className="location-picker__map" />
       <div className="location-picker__pin" aria-hidden="true">
@@ -104,6 +105,7 @@ export default function LocationPicker({ initialLat, initialLng, onConfirm, onCl
           Confirmar localização
         </button>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
