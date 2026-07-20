@@ -31,6 +31,10 @@
   display: flex;
   gap: 8px;
   overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-x: contain;
+  scroll-snap-type: x proximity;
+  touch-action: pan-x;
   padding: 0 16px 4px;
   scrollbar-width: none;
   margin-top: -28px;
@@ -40,6 +44,13 @@
 
 .gallery-filters::-webkit-scrollbar {
   display: none;
+}
+
+.gallery-filters .chip {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  scroll-snap-align: start;
 }
 
 .chip {

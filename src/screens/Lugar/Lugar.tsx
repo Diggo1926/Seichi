@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { Suspense, lazy, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { v4 as uuid } from 'uuid';
@@ -6,10 +6,38 @@ import { db } from '../../db';
 import type { Photo, PlaceStatus } from '../../types';
 import { STATUS_META, RATING_LABELS } from '../../types';
 import { processImage } from '../../lib/image';
-import { getCurrentPosition, googleMapsUrl } from '../../lib/geo';
+import { googleMapsUrl } from '../../lib/geo';
 import { useBlobUrl, usePhotoUrl } from '../../hooks/usePhotoUrl';
-import { BackIcon, ExternalLinkIcon, PlusIcon, TrashIcon, CloseIcon, LocationIcon } from '../../components/icons';
+
+const LocationPicker = lazy(() => import('../../components/LocationPicker'));
+import {
+  BackIcon,
+  ExternalLinkIcon,
+  PlusIcon,
+  TrashIcon,
+  CloseIcon,
+  LocationIcon,
+  MapPinIcon,
+  PencilIcon,
+  InstagramIcon,
+} from '../../components/icons';
 import './Lugar.css';
+
+function instagramLabel(rawUrl: string): string {
+  try {
+    const url = new URL(/^https?:\/\//i.test(rawUrl) ? rawUrl : `https://${rawUrl}`);
+    if (!url.hostname.includes('instagram.com')) return 'Ver no Instagram';
+    const [first] = url.pathname.split('/').filter(Boolean);
+    if (!first || ['p', 'reel', 'reels', 'tv', 'stories'].includes(first)) return 'Ver no Instagram';
+    return `@${first}`;
+  } catch {
+    return 'Ver no Instagram';
+  }
+}
+
+function normalizeExternalUrl(rawUrl: string): string {
+  return /^https?:\/\//i.test(rawUrl) ? rawUrl : `https://${rawUrl}`;
+}
 
 const SHEET_HEIGHT_RATIO = 0.84;
 const OPEN_VISIBLE_RATIO = 0.54;
@@ -83,10 +111,14 @@ export default function Lugar() {
     notesTimer.current = window.setTimeout(() => updatePlace({ notes: v }), 600);
   }
 
-  async function handleUseCurrentLocation() {
-    const pos = await getCurrentPosition();
-    if (pos) updatePlace({ lat: pos.coords.latitude, lng: pos.coords.longitude });
+  const [showLocationPicker, setShowLocationPicker] = useState(false);
+  function handleConfirmLocation(lat: number, lng: number) {
+    updatePlace({ lat, lng });
+    setShowLocationPicker(false);
   }
+
+  const [editingAddress, setEditingAddress] = useState(false);
+  const [editingInstagram, setEditingInstagram] = useState(false);
 
   const addPhotoInputRef = useRef<HTMLInputElement>(null);
   async function handleAddPhoto(e: React.ChangeEvent<HTMLInputElement>) {
@@ -272,14 +304,41 @@ export default function Lugar() {
             onPointerDown={stopDragPropagation}
           />
           <div className="lugar-sheet__address-row">
-            <input
-              className="lugar-sheet__address"
-              value={addressDraft}
-              placeholder="Endereço (opcional)"
-              onChange={(e) => setAddressDraft(e.target.value)}
-              onBlur={commitAddress}
-              onPointerDown={stopDragPropagation}
-            />
+            {editingAddress || !addressDraft.trim() ? (
+              <input
+                className="lugar-sheet__address"
+                value={addressDraft}
+                placeholder="Endereço (opcional)"
+                autoFocus={editingAddress}
+                onChange={(e) => setAddressDraft(e.target.value)}
+                onBlur={() => {
+                  commitAddress();
+                  setEditingAddress(false);
+                }}
+                onPointerDown={stopDragPropagation}
+              />
+            ) : (
+              <button
+                type="button"
+                className="lugar-sheet__address-link press"
+                onClick={() => window.open(googleMapsUrl(place), '_blank', 'noopener,noreferrer')}
+                onPointerDown={stopDragPropagation}
+              >
+                <MapPinIcon size={13} />
+                <span>{addressDraft}</span>
+              </button>
+            )}
+            {!editingAddress && addressDraft.trim() && (
+              <button
+                type="button"
+                className="lugar-sheet__address-edit tap-target"
+                onClick={() => setEditingAddress(true)}
+                onPointerDown={stopDragPropagation}
+                aria-label="Editar endereço"
+              >
+                <PencilIcon size={14} />
+              </button>
+            )}
             <span className="status-pill status-pill--sm" style={{ color: meta.color, background: meta.soft }}>
               {meta.label}
             </span>
@@ -302,10 +361,10 @@ export default function Lugar() {
             type="button"
             className="lugar-location-btn press fade-up"
             style={{ animationDelay: '30ms' }}
-            onClick={handleUseCurrentLocation}
+            onClick={() => setShowLocationPicker(true)}
           >
             <LocationIcon size={16} />
-            Usar minha localização atual
+            {place.lat != null && place.lng != null ? 'Editar localização' : 'Definir localização'}
           </button>
 
           <section className="lugar-section fade-up" style={{ animationDelay: '60ms' }}>
@@ -385,14 +444,44 @@ export default function Lugar() {
           </section>
 
           <section className="lugar-section fade-up" style={{ animationDelay: '220ms' }}>
-            <h3>Link do Instagram</h3>
-            <input
-              className="lugar-instagram"
-              value={igDraft}
-              placeholder="Cole o link do post…"
-              onChange={(e) => setIgDraft(e.target.value)}
-              onBlur={commitInstagram}
-            />
+            <h3>Instagram</h3>
+            {editingInstagram ? (
+              <input
+                className="lugar-instagram"
+                autoFocus
+                value={igDraft}
+                placeholder="Cole o link do post ou perfil…"
+                onChange={(e) => setIgDraft(e.target.value)}
+                onBlur={() => {
+                  commitInstagram();
+                  setEditingInstagram(false);
+                }}
+              />
+            ) : igDraft.trim() ? (
+              <div className="lugar-instagram-card">
+                <button
+                  type="button"
+                  className="lugar-instagram-open press"
+                  onClick={() => window.open(normalizeExternalUrl(igDraft), '_blank', 'noopener,noreferrer')}
+                >
+                  <InstagramIcon size={18} />
+                  <span>{instagramLabel(igDraft)}</span>
+                </button>
+                <button
+                  type="button"
+                  className="lugar-instagram-edit-btn tap-target"
+                  onClick={() => setEditingInstagram(true)}
+                  aria-label="Editar link do Instagram"
+                >
+                  <PencilIcon size={13} />
+                </button>
+              </div>
+            ) : (
+              <button type="button" className="lugar-instagram-add press" onClick={() => setEditingInstagram(true)}>
+                <PlusIcon size={14} />
+                Adicionar Instagram
+              </button>
+            )}
           </section>
 
           <section className="lugar-section fade-up" style={{ animationDelay: '260ms' }}>
@@ -448,6 +537,17 @@ export default function Lugar() {
           </button>
         </div>
       </div>
+
+      {showLocationPicker && (
+        <Suspense fallback={null}>
+          <LocationPicker
+            initialLat={place.lat}
+            initialLng={place.lng}
+            onConfirm={handleConfirmLocation}
+            onClose={() => setShowLocationPicker(false)}
+          />
+        </Suspense>
+      )}
     </div>
   );
 }

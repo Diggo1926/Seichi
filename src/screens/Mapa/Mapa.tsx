@@ -2,11 +2,11 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useLiveQuery } from 'dexie-react-hooks';
 import L from 'leaflet';
-import 'leaflet/dist/leaflet.css';
 import { db } from '../../db';
 import type { Place, PlaceStatus } from '../../types';
 import { STATUS_META } from '../../types';
 import { usePhotoUrl } from '../../hooks/usePhotoUrl';
+import { getCurrentPosition } from '../../lib/geo';
 import './Mapa.css';
 
 const STATUS_COLOR: Record<PlaceStatus, string> = {
@@ -88,11 +88,49 @@ export default function Mapa() {
       attribution: '&copy; OpenStreetMap',
     }).addTo(map);
     mapInstance.current = map;
+
+    // O container pode ainda não ter altura definida no primeiro layout (ex.: barra
+    // do Safari no iOS ainda se ajustando), então o mapa é recalculado algumas vezes
+    // logo após a criação e sempre que o próprio container mudar de tamanho.
+    const invalidate = () => mapInstance.current?.invalidateSize();
+    const raf = requestAnimationFrame(invalidate);
+    const t1 = window.setTimeout(invalidate, 300);
+    const t2 = window.setTimeout(invalidate, 900);
+
+    const resizeObserver = new ResizeObserver(invalidate);
+    resizeObserver.observe(mapElRef.current);
+
+    const onVisibility = () => {
+      if (document.visibilityState === 'visible') invalidate();
+    };
+    document.addEventListener('visibilitychange', onVisibility);
+
     return () => {
+      cancelAnimationFrame(raf);
+      window.clearTimeout(t1);
+      window.clearTimeout(t2);
+      resizeObserver.disconnect();
+      document.removeEventListener('visibilitychange', onVisibility);
       map.remove();
       mapInstance.current = null;
     };
   }, [online]);
+
+  // Sem nenhum lugar com coordenadas ainda: centraliza na localização atual do
+  // usuário (com permissão) em vez de deixar o mapa parado no centro do Brasil.
+  useEffect(() => {
+    if (!online || places === undefined || located.length > 0) return;
+    const map = mapInstance.current;
+    if (!map) return;
+    let cancelled = false;
+    getCurrentPosition().then((pos) => {
+      if (cancelled || !pos) return;
+      map.setView([pos.coords.latitude, pos.coords.longitude], 12);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [online, places, located.length]);
 
   function flyTo(place: Place) {
     const map = mapInstance.current;
